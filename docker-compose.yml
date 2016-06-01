@@ -1,0 +1,27 @@
+version: '2'
+services:
+  apache_php_5_6:
+    image:  web_server
+    container_name: web_server
+    build: .
+    ports:
+      - "80:80"
+      - "7800:22"
+    links:
+      - mysql_server
+    volumes:
+      - "../docroot:/var/www/html/"
+  mysql_server:
+    image: mysql
+    container_name: mysql_server
+    environment:
+      MYSQL_ROOT_PASSWORD: test9754
+      MYSQL_DATABASE: drupal
+    ports:
+      - "3306:3306"
+
+
+
+
+
+
