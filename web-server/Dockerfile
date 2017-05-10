@@ -1,19 +1,23 @@
-FROM php:5.6.21-fpm-alpine
+FROM php:7.1.1-fpm-alpine
 
 # define workdir to home
 WORKDIR /install
 	 
 	  # install composer
-RUN   \
-	  curl -sS https://getcomposer.org/installer | php \
+RUN   curl -sS https://getcomposer.org/installer | php \
 	  && mv composer.phar /usr/local/bin/composer
 
 # install the PHP extensions we need
 RUN apk update && apk add -U bash curl apache2 libpng libjpeg libpq wget mysql-client openssh \
-	&& rm -rf /var/lib/apt/lists/* \
-	#&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-	&& apk add php-pdo php-pdo_mysql php-pdo_pgsql zip
-#RUN usermod -u 1000 www-data
+	&& rm -rf /var/lib/apt/lists/*
+
+# Install firstly this, otherwise the pgsql won't install
+RUN apk --no-cache add postgresql-dev
+
+    
+
+
+RUN 	docker-php-ext-install pdo pdo_mysql pdo_pgsql
 #RUN a2enmod rewrite
 
 # set recommended PHP.ini settings
@@ -27,14 +31,11 @@ RUN { \
 		echo 'opcache.enable_cli=1'; \
 	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-# Install Composer.
-RUN curl -sS https://getcomposer.org/installer | php
-RUN mv composer.phar /usr/local/bin/composer
-
 # Prepare for SSH
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN /usr/bin/ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -C '' -N ''
 
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/init.d/sshd
@@ -46,18 +47,16 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 RUN wget http://files.drush.org/drush.phar
 RUN mv drush.phar /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 
-RUN cp /usr/src/php/php.ini-development /usr/local/etc/php/php.ini
-
 # Configure PHP.
-RUN sed -i 's/display_errors = Off/display_errors = On/' /usr/local/etc/php/php.ini
-RUN sed -i 's/display_errors = Off/display_errors = On/' /usr/local/etc/php/php.ini
+#RUN sed -i 's/display_errors = Off/display_errors = On/' /usr/local/etc/php/php.ini
+#RUN sed -i 's/display_errors = Off/display_errors = On/' /usr/local/etc/php/php.ini
 
 EXPOSE 80 22
 
 WORKDIR /var/www/html
 COPY entrypoint.sh /docker-entrypoint
 RUN chmod +x /docker-entrypoint
-ENTRYPOINT ["/docker-entrypoint"]
+#ENTRYPOINT ["/docker-entrypoint"]
 
 
 

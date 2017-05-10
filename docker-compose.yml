@@ -1,11 +1,11 @@
 version: '2'
 services:
-  apache_php_5_6:
-    image:  web_server
+  apache_php_7 :
+    image:  drupal_webserver
     container_name: web_server
     build: .
     ports:
-      - "80:80"
+      - "5100:80"
       - "7800:22"
     links:
       - mysql_server

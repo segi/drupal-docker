@@ -1,4 +1,3 @@
 #!/bin/sh
 
-/usr/sbin/sshd
-#httpd -D FOREGROUND
+exec /usr/sbin/sshd -D
